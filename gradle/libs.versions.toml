@@ -18,6 +18,8 @@ kotlinxCoroutinesCore = "1.10.2"
 kotlinxCoroutinesAndroid = "1.10.2"
 mapsCompose = "6.6.0"
 playServicesMaps = "18.2.0"
+ktorClientOkhttp = "2.3.4"
+ktorClientCore = "2.3.4"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -44,6 +46,8 @@ kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-cor
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "kotlinxCoroutinesAndroid" }
 maps-compose = { group = "com.google.maps.android", name = "maps-compose", version.ref = "mapsCompose" }
 play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "playServicesMaps" }
+ktor-client-okhttp = { group = "io.ktor", name = "ktor-client-okhttp", version.ref = "ktorClientOkhttp" }
+ktor-client-core = { group = "io.ktor", name = "ktor-client-core", version.ref = "ktorClientCore" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

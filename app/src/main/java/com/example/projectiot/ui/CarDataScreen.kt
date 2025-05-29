@@ -1,11 +1,13 @@
 package com.example.projectiot.ui
 
 import android.annotation.SuppressLint
+import android.widget.Toast
 import androidx.compose.runtime.*
 import androidx.compose.material3.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.projectiot.*
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -63,7 +65,7 @@ fun CarDataScreen(viewModel: MainViewModel = viewModel()) {
 
             Text("📍 GPS: ${gps?.lat ?: "--"}, ${gps?.lon ?: "--"}")
             Text("🚪 Porte: Frontale: ${doors?.front ?: "--"}, Posteriore: ${doors?.back ?: "--"}")
-            Text("👤 Presenza passeggero: ${presence?.driverPresent ?: "--"}")
+            Text("👤 Presenza passeggero: ${presence?.presence ?: "--"}")
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -73,3 +75,19 @@ fun CarDataScreen(viewModel: MainViewModel = viewModel()) {
         }
     }
 }
+
+//@Composable
+//fun RemoteControl(viewModel: MainViewModel = viewModel()) {
+//    val context = LocalContext.current
+//    var isLocked by remember { mutableStateOf(false) }
+//
+//    Button(onClick = {
+//        val command = if (isLocked) "unlock" else "lock"
+//        viewModel.sendDoorCommand(command) {
+//            isLocked = !isLocked
+//            Toast.makeText(context, "Comando ${command} inviato", Toast.LENGTH_SHORT).show()
+//        }
+//    }) {
+//        Text(if (isLocked) "🔓 Sblocca porte" else "🔒 Blocca porte")
+//    }
+//}

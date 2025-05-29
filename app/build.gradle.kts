@@ -59,6 +59,8 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.maps.compose)
     implementation(libs.play.services.maps)
+    implementation(libs.ktor.client.okhttp)
+    implementation(libs.ktor.client.core)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
