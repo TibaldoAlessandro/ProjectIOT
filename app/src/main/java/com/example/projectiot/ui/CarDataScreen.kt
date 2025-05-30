@@ -5,10 +5,14 @@ import android.widget.Toast
 import androidx.compose.runtime.*
 import androidx.compose.material3.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.projectiot.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -21,6 +25,9 @@ fun CarDataScreen(viewModel: MainViewModel = viewModel()) {
     val gps by viewModel.gps.collectAsState()
     val doors by viewModel.doors.collectAsState()
     val presence by viewModel.presence.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val doorCommandStatus by viewModel.doorCommandStatus.collectAsState()
+    val context = LocalContext.current
 
     val cameraPositionState = rememberCameraPositionState {
         gps?.let {
@@ -34,60 +41,212 @@ fun CarDataScreen(viewModel: MainViewModel = viewModel()) {
         }
     }
 
+    // Mostra toast per i messaggi di stato
+    LaunchedEffect(doorCommandStatus) {
+        doorCommandStatus?.let { message ->
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            viewModel.clearStatus()
+        }
+    }
+
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxSize().padding(8.dp)
+            modifier = Modifier.fillMaxSize().padding(16.dp)
         ) {
-            Text("🚗 Dati veicolo", style = MaterialTheme.typography.headlineSmall)
+            Text(
+                "🚗 Controllo Veicolo IoT",
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 24.sp
+                )
+            )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            if (gps != null) {
-                GoogleMap(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(300.dp),
-                    cameraPositionState = cameraPositionState
-                ) {
-                    Marker(
-                        state = MarkerState(position = LatLng(gps!!.lat, gps!!.lon)),
-                        title = "Auto",
-                        snippet = "Posizione attuale"
+            // Mappa GPS
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        "📍 Posizione GPS",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
                     )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    if (gps != null) {
+                        GoogleMap(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp),
+                            cameraPositionState = cameraPositionState
+                        ) {
+                            Marker(
+                                state = MarkerState(position = LatLng(gps!!.lat, gps!!.lon)),
+                                title = "Auto",
+                                snippet = "Posizione attuale"
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            "Coordinate: ${String.format("%.6f", gps!!.lat)}, ${String.format("%.6f", gps!!.lon)}",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (isLoading) {
+                                CircularProgressIndicator()
+                            } else {
+                                Text("🕒 Caricamento posizione...")
+                            }
+                        }
+                    }
                 }
-            } else {
-                Text("🕒 Caricamento posizione...")
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text("📍 GPS: ${gps?.lat ?: "--"}, ${gps?.lon ?: "--"}")
-            Text("🚪 Porte: Frontale: ${doors?.front ?: "--"}, Posteriore: ${doors?.back ?: "--"}")
-            Text("👤 Presenza passeggero: ${presence?.presence ?: "--"}")
+            // Informazioni veicolo
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        "📊 Stato Veicolo",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("🚪 Porta Anteriore:")
+                            Text(
+                                if (doors?.front == true) "🔓 Aperta" else "🔒 Chiusa",
+                                color = if (doors?.front == true) Color.Red else Color.Green,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("🚪 Porta Posteriore:")
+                            Text(
+                                if (doors?.back == true) "🔓 Aperta" else "🔒 Chiusa",
+                                color = if (doors?.back == true) Color.Red else Color.Green,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text("👤 Presenza Passeggero:")
+                    Text(
+                        if (presence?.presence == true) "✅ Presente" else "❌ Assente",
+                        color = if (presence?.presence == true) Color.Green else Color.Gray,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Button(onClick = { viewModel.fetchData() }) {
-                Text("🔄 Aggiorna dati")
+            // Controlli
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        "🎮 Controlli",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        // Bottone Blocca
+                        Button(
+                            onClick = {
+                                viewModel.sendDoorCommand("lock") { success, message ->
+                                    // Il toast viene gestito automaticamente dal LaunchedEffect
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                            enabled = !isLoading,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.error
+                            )
+                        ) {
+                            if (isLoading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(16.dp),
+                                    color = Color.White
+                                )
+                            } else {
+                                Text("🔒 Blocca")
+                            }
+                        }
+
+                        // Bottone Sblocca
+                        Button(
+                            onClick = {
+                                viewModel.sendDoorCommand("unlock") { success, message ->
+                                    // Il toast viene gestito automaticamente dal LaunchedEffect
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                            enabled = !isLoading,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF4CAF50)
+                            )
+                        ) {
+                            if (isLoading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(16.dp),
+                                    color = Color.White
+                                )
+                            } else {
+                                Text("🔓 Sblocca")
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Bottone Aggiorna
+                    Button(
+                        onClick = { viewModel.fetchData() },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !isLoading
+                    ) {
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                color = Color.White
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                        }
+                        Text("🔄 ${if (isLoading) "Caricamento..." else "Aggiorna Dati"}")
+                    }
+                }
             }
         }
     }
 }
-
-//@Composable
-//fun RemoteControl(viewModel: MainViewModel = viewModel()) {
-//    val context = LocalContext.current
-//    var isLocked by remember { mutableStateOf(false) }
-//
-//    Button(onClick = {
-//        val command = if (isLocked) "unlock" else "lock"
-//        viewModel.sendDoorCommand(command) {
-//            isLocked = !isLocked
-//            Toast.makeText(context, "Comando ${command} inviato", Toast.LENGTH_SHORT).show()
-//        }
-//    }) {
-//        Text(if (isLocked) "🔓 Sblocca porte" else "🔒 Blocca porte")
-//    }
-//}
