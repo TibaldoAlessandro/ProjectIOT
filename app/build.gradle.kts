@@ -8,6 +8,9 @@ android {
     namespace = "com.example.projectiot"
     compileSdk = 35
 
+    def API_KEY = project.findProperty("API_KEY") ?: ""
+    buildConfigField "String", "API_KEY", "\"${API_KEY}\""
+
     defaultConfig {
         applicationId = "com.example.projectiot"
         minSdk = 24
@@ -61,6 +64,8 @@ dependencies {
     implementation(libs.play.services.maps)
     implementation(libs.ktor.client.okhttp)
     implementation(libs.ktor.client.core)
+    implementation(libs.org.eclipse.paho.client.mqttv3)
+    implementation(libs.org.eclipse.paho.android.service)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
