@@ -15,7 +15,7 @@ interface ApiService {
     @GET("/api/presence")
     suspend fun getPresence(): PresenceData
 
-    @POST("/api/doors/control")
+    @POST("/api/doors")
     suspend fun controlDoors(@Body command: DoorCommand): Response<Unit>
 }
 

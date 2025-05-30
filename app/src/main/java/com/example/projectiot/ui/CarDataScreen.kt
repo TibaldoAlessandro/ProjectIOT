@@ -19,7 +19,7 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.maps.android.compose.*
 import com.google.android.gms.maps.model.*
 
-@SuppressLint("UnrememberedMutableState")
+@SuppressLint("UnrememberedMutableState", "DefaultLocale")
 @Composable
 fun CarDataScreen(viewModel: MainViewModel = viewModel()) {
     val gps by viewModel.gps.collectAsState()
@@ -134,8 +134,8 @@ fun CarDataScreen(viewModel: MainViewModel = viewModel()) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text("🚪 Porta Anteriore:")
                             Text(
-                                if (doors?.front == true) "🔓 Aperta" else "🔒 Chiusa",
-                                color = if (doors?.front == true) Color.Red else Color.Green,
+                                if (doors?.front == false) "🔓 Aperta" else "🔒 Chiusa",
+                                color = if (doors?.front == false) Color.Red else Color.Green,
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -143,8 +143,8 @@ fun CarDataScreen(viewModel: MainViewModel = viewModel()) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text("🚪 Porta Posteriore:")
                             Text(
-                                if (doors?.back == true) "🔓 Aperta" else "🔒 Chiusa",
-                                color = if (doors?.back == true) Color.Red else Color.Green,
+                                if (doors?.back == false) "🔓 Aperta" else "🔒 Chiusa",
+                                color = if (doors?.back == false) Color.Red else Color.Green,
                                 fontWeight = FontWeight.Bold
                             )
                         }
