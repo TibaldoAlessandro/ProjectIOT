@@ -20,6 +20,8 @@ mapsCompose = "6.6.0"
 playServicesMaps = "18.2.0"
 ktorClientOkhttp = "2.3.4"
 ktorClientCore = "2.3.4"
+orgEclipsePahoClientMqttv3 = "1.2.5"
+orgEclipsePahoAndroidService = "1.1.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -48,6 +50,8 @@ maps-compose = { group = "com.google.maps.android", name = "maps-compose", versi
 play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "playServicesMaps" }
 ktor-client-okhttp = { group = "io.ktor", name = "ktor-client-okhttp", version.ref = "ktorClientOkhttp" }
 ktor-client-core = { group = "io.ktor", name = "ktor-client-core", version.ref = "ktorClientCore" }
+org-eclipse-paho-client-mqttv3 = { group = "org.eclipse.paho", name = "org.eclipse.paho.client.mqttv3", version.ref = "orgEclipsePahoClientMqttv3" }
+org-eclipse-paho-android-service = { group = "org.eclipse.paho", name = "org.eclipse.paho.android.service", version.ref = "orgEclipsePahoAndroidService" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

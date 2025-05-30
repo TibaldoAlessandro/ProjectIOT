@@ -13,10 +13,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ProjectIOT"
         tools:targetApi="31">
+        <service android:name="org.eclipse.paho.android.service.MqttService" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:label="@string/app_name"
             android:theme="@style/Theme.ProjectIOT">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -1,71 +1,101 @@
 package com.example.projectiot
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class MainViewModel : ViewModel() {
+class MainViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val repo = Repository()
+    private val repo = MqttRepository(application.applicationContext)
 
-    private val _gps = MutableStateFlow<GpsData?>(null)
-    val gps: StateFlow<GpsData?> = _gps
-
-    private val _doors = MutableStateFlow<DoorData?>(null)
-    val doors: StateFlow<DoorData?> = _doors
-
-    private val _presence = MutableStateFlow<PresenceData?>(null)
-    val presence: StateFlow<PresenceData?> = _presence
+    // StateFlow per i dati (provengono dal repository/servizio MQTT)
+    val gps: StateFlow<GpsData?> = repo.gpsData
+    val doors: StateFlow<DoorData?> = repo.doorData
+    val presence: StateFlow<PresenceData?> = repo.presenceData
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
     private val _doorCommandStatus = MutableStateFlow<String?>(null)
-    val doorCommandStatus: StateFlow<String?> = _doorCommandStatus
 
-    fun fetchData() {
+    private val _isInitialized = MutableStateFlow(false)
+
+    init {
+        // Connessione automatica all'avvio
+        connectToMqtt()
+    }
+
+    private fun connectToMqtt() {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                _gps.value = repo.getGps()
-                _doors.value = repo.getDoors()
-                _presence.value = repo.getPresence()
+                val connected = repo.connect()
+                if (connected) {
+                    _doorCommandStatus.value = "Connesso al broker MQTT"
+                    _isInitialized.value = true
+                    // Richiedi i dati iniziali
+                    repo.requestDataUpdate()
+                } else {
+                    _doorCommandStatus.value = "Errore di connessione al broker MQTT"
+                }
             } catch (e: Exception) {
-                e.printStackTrace()
-                _doorCommandStatus.value = "Errore nel caricamento dei dati"
+                _doorCommandStatus.value = "Errore di connessione: ${e.message}"
             } finally {
                 _isLoading.value = false
             }
+        }
+    }
+
+    fun reconnectToMqtt() {
+        if (!repo.isConnected()) {
+            connectToMqtt()
+        }
+    }
+
+    fun fetchData() {
+        if (repo.isConnected()) {
+            repo.requestDataUpdate()
+            _doorCommandStatus.value = "Richiesta aggiornamento dati inviata"
+        } else {
+            _doorCommandStatus.value = "Non connesso al broker MQTT"
+            connectToMqtt()
         }
     }
 
     fun sendDoorCommand(command: String, onComplete: (Boolean, String) -> Unit) {
+        if (!repo.isConnected()) {
+            onComplete(false, "Non connesso al broker MQTT")
+            return
+        }
+
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val response = repo.controlDoors(command)
-                if (response.isSuccessful) {
-                    _doorCommandStatus.value = "Comando $command inviato con successo"
-                    onComplete(true, "Comando $command inviato con successo")
-                    // Aggiorna i dati delle porte dopo il comando
-                    fetchData()
+                val success = repo.sendDoorCommand(command)
+                if (success) {
+                    val message = "Comando $command inviato con successo"
+                    _doorCommandStatus.value = message
+                    onComplete(true, message)
                 } else {
-                    _doorCommandStatus.value = "Errore nell'invio del comando"
-                    onComplete(false, "Errore nell'invio del comando")
+                    val message = "Errore nell'invio del comando $command"
+                    _doorCommandStatus.value = message
+                    onComplete(false, message)
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
-                _doorCommandStatus.value = "Errore di connessione"
-                onComplete(false, "Errore di connessione: ${e.message}")
+                val message = "Errore di comunicazione: ${e.message}"
+                _doorCommandStatus.value = message
+                onComplete(false, message)
             } finally {
                 _isLoading.value = false
             }
         }
     }
 
-    fun clearStatus() {
-        _doorCommandStatus.value = null
+    override fun onCleared() {
+        super.onCleared()
+        repo.disconnect()
     }
 }
